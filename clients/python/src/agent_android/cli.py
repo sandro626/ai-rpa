@@ -27,6 +27,7 @@ Quick start:
 
 One-off examples:
     agent-android --launch com.example.app --url http://<device-ip>:8080
+    agent-android --launch com.example.app --launch-choice 2 --url http://<device-ip>:8080
     agent-android --tap 7 --url http://<device-ip>:8080
     agent-android --input 7 "hello world" --url http://<device-ip>:8080
     agent-android --template template.json --url http://<device-ip>:8080
@@ -66,7 +67,7 @@ REPL quick reference:
     s [path]                  Capture screenshot
     ux [path] [--all]         Print or save the current UI tree XML
     up <local> <path>         Upload a file to the phone (overwrites by default)
-    la <pkg>                  Launch an app by package name
+    la <pkg> [--choice N]      Launch an app or select a returned chooser option
     p <key>                   Press a system key (back/home/recents)
     b                         Navigate back
     vars                      Show session variables
@@ -120,6 +121,10 @@ def build_parser() -> argparse.ArgumentParser:
     group.add_argument("--stop-task", metavar="TASK_ID", help="Stop one async REPL task via /tasks/TASK_ID/stop")
     group.add_argument("--upload", metavar="LOCAL_FILE", help="Upload a local file to the phone via /upload")
     group.add_argument("--launch", "-a", type=str, metavar="PACKAGE", help="Launch app")
+    launch_choice = parser.add_mutually_exclusive_group()
+    launch_choice.add_argument("--launch-choice", type=int, metavar="N", help="Select one visible system chooser option by its one-based index")
+    launch_choice.add_argument("--launch-choice-text", metavar="LABEL", help="Select a system chooser option by its exact unique label")
+    parser.add_argument("--launch-timeout", type=int, default=8, metavar="SECONDS", help="Total app launch wait budget, 1-30 seconds (default: 8)")
     group.add_argument("--health", action="store_true", help="Check service health from /health")
     group.add_argument("--back", action="store_true", help="Press back button")
     group.add_argument("--apps", action="store_true", help="List launcher apps from /apps")
@@ -293,7 +298,11 @@ def _run_direct_commands(args: argparse.Namespace, client: AgentAndroidClient) -
     if args.press:
         _exit_with_repl_result(session._cmd_press([args.press]))
     if args.launch:
-        _exit_with_repl_result(session._cmd_launch([args.launch]))
+        ok = client.launch_app(args.launch, choice_index=args.launch_choice,
+                               choice_text=args.launch_choice_text,
+                               timeout_ms=args.launch_timeout * 1000, raw=args.raw)
+        status = getattr(client, "last_launch_result", {}).get("status")
+        raise SystemExit(0 if ok else 2 if status == "selection_required" else 1)
     if args.apps:
         _exit_with_repl_result(session._cmd_apps([]))
     if args.screenshot is not None:
@@ -466,6 +475,14 @@ def main() -> int:
         parser.error("--variables requires --application-bundle")
     if args.async_execution and not (args.template or args.application_bundle):
         parser.error("--async requires --template or --application-bundle")
+    if (args.launch_choice is not None or args.launch_choice_text is not None or args.launch_timeout != 8) and not args.launch:
+        parser.error("--launch-choice, --launch-choice-text and --launch-timeout require --launch")
+    if args.launch_choice is not None and args.launch_choice < 1:
+        parser.error("--launch-choice must be positive")
+    if args.launch_choice_text is not None and not args.launch_choice_text.strip():
+        parser.error("--launch-choice-text must not be empty")
+    if not 1 <= args.launch_timeout <= 30:
+        parser.error("--launch-timeout must be between 1 and 30 seconds")
     if args.execute_timeout <= 0:
         parser.error("--execute-timeout must be positive")
     url = require_base_url(args.url)

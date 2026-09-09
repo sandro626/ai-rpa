@@ -1208,14 +1208,33 @@ class AriaReplSession:
     # -------------------------------------------------------------------------
 
     def _cmd_launch(self, args: List[str]) -> bool:
-        """la <package> - launch an app."""
+        """la <package> [--choice N | --choice-text LABEL] [--timeout SECONDS]."""
         if not args:
-            self._print_error("Usage: la <package>")
+            self._print_error("Usage: la <package> [--choice N | --choice-text LABEL] [--timeout SECONDS]")
             return False
         package = args[0]
-        ok = self.client.launch_app(package)
-        if ok:
-            self._invalidate_tree()
+        options = {}
+        try:
+            for i in range(1, len(args), 2):
+                if i + 1 >= len(args):
+                    raise ValueError("Missing launch option value")
+                flag, value = args[i:i + 2]
+                if flag == "--choice":
+                    key, value = "choice_index", int(value)
+                elif flag == "--choice-text":
+                    key = "choice_text"
+                elif flag == "--timeout":
+                    key, value = "timeout_ms", int(value) * 1000
+                else:
+                    raise ValueError(f"Unknown launch option: {flag}")
+                if key in options:
+                    raise ValueError(f"Repeated launch option: {flag}")
+                options[key] = value
+            ok = self.client.launch_app(package, **options)
+        except ValueError as exc:
+            self._print_error(str(exc))
+            return False
+        self._invalidate_tree()
         return ok
 
     def _cmd_la(self, args: List[str]) -> bool:
@@ -1374,7 +1393,7 @@ class AriaReplSession:
             "                       Use --all to include off-screen nodes in the XML dump",
             "    up <local> <path> Upload a local file to the phone (overwrites by default)",
             "                       Add --no-overwrite to fail when the target already exists",
-            "    la <package>      Launch an app (for example com.xingin.xhs)",
+            "    la <package> [--choice N | --choice-text LABEL] [--timeout SECONDS]",
             "",
             "  Session",
             "    raw                Toggle raw JSON output",

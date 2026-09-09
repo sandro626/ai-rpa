@@ -1341,14 +1341,52 @@ class AgentAndroidClient:
     # ---------------------------------------------------------------------------
     # ---------------------------------------------------------------------------
 
-    def launch_app(self, package: str) -> bool:
-        return self._run_single_operation(
-            template_id=f"launch-{package}",
-            operation_type="android.app.launch",
-            parameters={"packageName": package},
-            success_message=f"Launched: {package}",
-            failure_prefix="Launch failed"
-        )
+    def launch_app(self, package: str, *, choice_index: Optional[int] = None,
+                   choice_text: Optional[str] = None, timeout_ms: int = 8000,
+                   raw: bool = False) -> bool:
+        """Return control on a system chooser; never equate selection_required with launch success."""
+        if choice_index is not None and (isinstance(choice_index, bool) or not isinstance(choice_index, int) or choice_index < 1):
+            raise ValueError("choice_index must be a positive integer")
+        if choice_index is not None and choice_text is not None:
+            raise ValueError("Use choice_index or choice_text, not both")
+        if choice_text is not None and not choice_text.strip():
+            raise ValueError("choice_text must not be empty")
+        if not 1000 <= timeout_ms <= 30000:
+            raise ValueError("timeout_ms must be between 1000 and 30000")
+        parameters: Dict[str, Any] = {
+            "packageName": package, "timeoutMs": timeout_ms,
+            "selectionHandling": "return", "outputVariable": "launchResult",
+        }
+        if choice_index is not None:
+            parameters["choiceIndex"] = choice_index
+        if choice_text is not None:
+            parameters["choiceText"] = choice_text.strip()
+        result = self._api_call({
+            "templateId": f"launch-{package}",
+            "parameters": [{"name": "launchResult", "type": "OBJECT", "direction": "OUTPUT"}],
+            "operations": [{"operationType": "android.app.launch", "parameters": parameters}],
+        }, timeout=timeout_ms / 1000 + 5)
+        details = self._get_outputs(result).get("launchResult")
+        if not isinstance(details, dict) or details.get("status") not in ("launched", "selection_required"):
+            details = {
+                "status": "failed", "launched": False, "packageName": package,
+                "message": (result or {}).get("errorMessage", "Missing structured launch result. Update the phone-side AIVane app."),
+            }
+        self.last_launch_result = details
+        self._invalidate_ui_state_cache()
+        if raw:
+            print(json.dumps(details, ensure_ascii=False))
+        elif details["status"] == "launched" and details.get("launched") is True:
+            print(f"Launched: {package}")
+        elif details["status"] == "selection_required":
+            print(f"selection_required: {details.get('message', 'Choose an app instance.')}")
+            for choice in details.get("choices", []):
+                print(f"  [{choice['index']}] {choice.get('label', '')}")
+            print(f"Continue: agent-android --url {self.base_url} --launch {package} --launch-choice N")
+            print("Indices refer to the current visible chooser; they do not identify original/clone accounts.")
+        else:
+            print(f"Launch failed: {details.get('message', 'Unknown error')}")
+        return details.get("status") == "launched" and details.get("launched") is True
 
     def press_back(self) -> bool:
         return self._run_single_operation(
