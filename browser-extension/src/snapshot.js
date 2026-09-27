@@ -1,18 +1,59 @@
 export async function captureSnapshot(chromeApi, parameters) {
   const tabId = requireInteger(parameters.tabId, "tabId");
-  const target = { tabId };
-  if (Number.isInteger(parameters.frameId)) {
-    target.frameIds = [parameters.frameId];
+
+  // 冻结标签页防御(p-pilot 补丁,2026-09-27 真机:后台标签被 Chrome Memory
+  // Saver 冻结时 scripting.executeScript 挂死无回调 → 桥侧 30s COMMAND_TIMEOUT,
+  // 任务 0 步启动失败)。先激活解冻再注入;注入自带 10s 限时,超时重激活重试
+  // 一次,仍不行为明确错误码(sidecar 拿到可诊断原因,不再是干等超时)。
+  const activateTab = async () => {
+    try {
+      await chromeApi.tabs.update(tabId, { active: true });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+  const injectWithTimeout = async timeoutMs => {
+    const target = { tabId };
+    if (Number.isInteger(parameters.frameId)) {
+      target.frameIds = [parameters.frameId];
+    }
+    const injection = chromeApi.scripting.executeScript({
+      target,
+      world: "ISOLATED",
+      func: captureDocumentSnapshot,
+      args: [{
+        locator: parameters.locator ?? null,
+        maxNodes: Math.max(1, Math.min(Number(parameters.maxNodes ?? 2000), 10000))
+      }]
+    });
+    let timer;
+    try {
+      return await Promise.race([
+        injection,
+        new Promise((_, reject) => {
+          timer = setTimeout(
+            () => reject(commandError("SCRIPT_EXEC_TIMEOUT",
+              "Snapshot injection timed out (frozen or busy tab).")),
+            timeoutMs
+          );
+        })
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  await activateTab();
+  let executions;
+  try {
+    executions = await injectWithTimeout(10000);
+  } catch (error) {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await activateTab();
+    executions = await injectWithTimeout(10000);
   }
-  const [execution] = await chromeApi.scripting.executeScript({
-    target,
-    world: "ISOLATED",
-    func: captureDocumentSnapshot,
-    args: [{
-      locator: parameters.locator ?? null,
-      maxNodes: Math.max(1, Math.min(Number(parameters.maxNodes ?? 2000), 10000))
-    }]
-  });
+  const execution = Array.isArray(executions) ? executions[0] : executions;
   if (!execution) {
     throw commandError("NO_SCRIPT_RESULT", "Snapshot capture returned no result.");
   }
