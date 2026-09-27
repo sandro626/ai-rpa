@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIVane Recorder</title>
+  <link rel="icon" type="image/png" href="../assets/store-icon-128.png">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="popup-shell">
+    <header class="brand-row">
+      <img class="brand-mark" src="../assets/store-icon-128.png" alt="">
+      <div>
+        <strong>AIVane</strong>
+        <small>Recorder</small>
+      </div>
+      <span id="connectionBadge" class="connection-badge"><span data-i18n="connecting">Connecting</span></span>
+    </header>
+
+    <section id="statusPanel" class="status-panel" aria-live="polite">
+      <div id="statusIcon" class="status-icon idle"><span></span></div>
+      <p id="eyebrow" class="eyebrow"><span data-i18n="ready">Ready when you are</span></p>
+      <h1 id="title"><span data-i18n="idleTitle">Show it once. Automate it.</span></h1>
+      <p id="description" class="description">
+        <span data-i18n="idleDescription">Start recording, then use the website as you normally would.</span>
+      </p>
+      <div id="stepCounter" class="step-counter" hidden>
+        <strong id="stepCount">0</strong>
+        <span><span data-i18n="actionsRecorded">actions recorded</span></span>
+      </div>
+    </section>
+
+    <p id="errorMessage" class="error-message" hidden></p>
+
+    <div id="idleActions" class="action-stack">
+      <button id="startButton" class="primary-button" type="button">
+        <span class="record-dot"></span>
+        <span data-i18n="start">Start recording</span>
+      </button>
+      <button id="openButton" class="text-button" type="button">
+        <span data-i18n="open">Open AIVane Recorder</span>
+      </button>
+    </div>
+
+    <div id="setupActions" class="action-stack" hidden>
+      <a id="setupLink" class="primary-button" href="https://aivane.net/browser-bridge/setup/" target="_blank" rel="noopener noreferrer">
+        <span id="setupLinkLabel" data-i18n="getDesktopApp">Get the desktop app</span>
+      </a>
+      <button id="retryButton" class="text-button" type="button"><span data-i18n="tryAgain">Try again</span></button>
+    </div>
+
+    <div id="recordingActions" class="action-grid" hidden>
+      <button id="pauseButton" class="secondary-button" type="button"><span data-i18n="pause">Pause</span></button>
+      <button id="finishButton" class="primary-button" type="button"><span data-i18n="finish">Finish</span></button>
+      <button id="discardButton" class="text-button danger" type="button"><span data-i18n="discard">Discard recording</span></button>
+    </div>
+
+    <div id="pausedActions" class="action-grid" hidden>
+      <button id="resumeButton" class="secondary-button" type="button"><span data-i18n="resume">Resume</span></button>
+      <button id="pausedFinishButton" class="primary-button" type="button"><span data-i18n="finish">Finish</span></button>
+      <button id="pausedDiscardButton" class="text-button danger" type="button"><span data-i18n="discard">Discard recording</span></button>
+    </div>
+    <p class="privacy-notice"><span data-i18n="privacyNotice">Recording sends page content and form values to AIVane on this device. Avoid passwords and sensitive data. Desktop AI features may share selected content with your chosen provider.</span> <a href="https://aivane.net/browser-bridge/privacy/" target="_blank" rel="noopener noreferrer" data-i18n="privacyPolicy">Privacy policy</a></p>
+    <button id="settingsButton" class="text-button" type="button" data-i18n="settings">Settings</button>
+  </main>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

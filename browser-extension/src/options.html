@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AIVane Browser Bridge</title>
+    <link rel="icon" type="image/png" href="../assets/store-icon-128.png">
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <img class="mark" src="../assets/store-icon-128.png" alt="">
+        <div>
+          <h1>AIVane Browser Bridge</h1>
+          <p data-i18n="optionsDescription">Connect this browser profile to the local AIVane runtime.</p>
+        </div>
+      </header>
+
+      <section class="status-card" aria-live="polite">
+        <div>
+          <span class="status-label" data-i18n="bridge">Bridge</span>
+          <strong id="bridge-status" data-i18n="checking">Checking…</strong>
+        </div>
+      </section>
+
+      <section class="status-card">
+        <label for="language" data-i18n="language">Language</label>
+        <select id="language" disabled>
+          <option value="system" data-i18n="automatic">Automatic (browser language)</option>
+          <option value="en" data-i18n="english">English</option>
+          <option value="zh-CN" data-i18n="chinese">Simplified Chinese</option>
+        </select>
+        <p class="hint" data-i18n="languageHint">Shared with AIVane Recorder and the local Workbench on this device.</p>
+        <p id="language-status" role="status"></p>
+      </section>
+      <form id="settings">
+        <label for="profile-id" data-i18n="profileLabel">Profile label</label>
+        <input
+          id="profile-id"
+          name="profileId"
+          type="text"
+          maxlength="64"
+          pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,63}"
+          placeholder="default"
+          autocomplete="off"
+        >
+        <p class="hint" data-i18n="profileHint">This profile is selected automatically by web.create and web.get. A single connected profile also works without an explicit label.</p>
+
+        <label for="bridge-url" data-i18n="bridgeUrl">Local bridge URL</label>
+        <input
+          id="bridge-url"
+          name="bridgeBaseUrl"
+          type="url"
+          spellcheck="false"
+          required
+        >
+        <p class="hint" data-i18n="bridgeHint">Only localhost, 127.0.0.1, and ::1 are accepted.</p>
+
+        <div class="actions">
+          <button type="submit" data-i18n="save">Save and reconnect</button>
+          <span id="save-status" role="status"></span>
+        </div>
+      </form>
+
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,151 @@
+:root {
+  color-scheme: light dark;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+}
+
+body {
+  margin: 0;
+  min-width: 520px;
+  color: light-dark(#172033, #edf2ff);
+  background: light-dark(#f5f7fb, #121827);
+}
+
+main {
+  box-sizing: border-box;
+  max-width: 720px;
+  min-height: 420px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.mark {
+  display: block;
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 8px rgba(40, 58, 28, 0.18));
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+header p,
+.hint {
+  margin: 4px 0 0;
+  color: light-dark(#657089, #aab5cf);
+}
+
+.status-card,
+form,
+aside {
+  border: 1px solid light-dark(#dfe4ef, #303a52);
+  border-radius: 14px;
+  background: light-dark(#ffffff, #1a2235);
+}
+
+.status-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+}
+
+.status-card div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.status-label {
+  color: light-dark(#657089, #aab5cf);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.good {
+  color: light-dark(#087c55, #62dcae);
+}
+
+.bad {
+  color: light-dark(#b33a47, #ff8995);
+}
+
+form {
+  padding: 18px;
+}
+
+label {
+  display: block;
+  margin-top: 14px;
+  font-weight: 650;
+}
+
+label:first-child {
+  margin-top: 0;
+}
+
+input {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 7px;
+  padding: 10px 12px;
+  border: 1px solid light-dark(#cdd4e3, #45516d);
+  border-radius: 9px;
+  color: inherit;
+  background: light-dark(#ffffff, #121827);
+  font: inherit;
+}
+
+input:focus {
+  outline: 3px solid color-mix(in srgb, #5d77ff 24%, transparent);
+  border-color: #5d77ff;
+}
+
+code {
+  font-family: "Cascadia Code", Consolas, monospace;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+button {
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 15px;
+  color: white;
+  background: #5d67e8;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #4c56d3;
+}
+
+#save-status {
+  color: light-dark(#657089, #aab5cf);
+}
+
+aside {
+  margin-top: 16px;
+  padding: 13px 16px;
+  border-color: light-dark(#eccd82, #806c39);
+  background: light-dark(#fff9e8, #2b281d);
+}

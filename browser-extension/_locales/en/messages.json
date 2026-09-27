@@ -1,0 +1,194 @@
+{
+  "extensionName": {
+    "message": "AIVane Browser Bridge"
+  },
+  "extensionDescription": {
+    "message": "Connects the local AIVane desktop app to your browser for user-authorized automation and recording."
+  },
+  "connecting": {
+    "message": "Connecting"
+  },
+  "ready": {
+    "message": "Ready when you are"
+  },
+  "idleTitle": {
+    "message": "Show it once. Automate it."
+  },
+  "idleDescription": {
+    "message": "Start recording, then use the website as you normally would."
+  },
+  "actionsRecorded": {
+    "message": "actions recorded"
+  },
+  "start": {
+    "message": "Start recording"
+  },
+  "open": {
+    "message": "Open AIVane Recorder"
+  },
+  "pause": {
+    "message": "Pause"
+  },
+  "finish": {
+    "message": "Finish"
+  },
+  "discard": {
+    "message": "Discard recording"
+  },
+  "resume": {
+    "message": "Resume"
+  },
+  "commandFailed": {
+    "message": "The action could not be completed."
+  },
+  "connected": {
+    "message": "Connected"
+  },
+  "disconnected": {
+    "message": "Disconnected"
+  },
+  "starting": {
+    "message": "Starting"
+  },
+  "startingTitle": {
+    "message": "Connecting to AIVane Recorder"
+  },
+  "startingDescription": {
+    "message": "Recording will start once connected."
+  },
+  "recording": {
+    "message": "Recording"
+  },
+  "recordingTitle": {
+    "message": "Keep going with your task"
+  },
+  "recordingDescription": {
+    "message": "AIVane organizes repeated inputs and page changes automatically."
+  },
+  "paused": {
+    "message": "Paused"
+  },
+  "pausedTitle": {
+    "message": "Adjust the page as needed"
+  },
+  "pausedDescription": {
+    "message": "Resume when ready. Your recorded actions are preserved."
+  },
+  "completed": {
+    "message": "Recording complete"
+  },
+  "completedTitle": {
+    "message": "Preparing your workflow"
+  },
+  "completedDescription": {
+    "message": "Your workflow will open shortly."
+  },
+  "openFailed": {
+    "message": "AIVane Recorder could not start."
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "language": {
+    "message": "Language"
+  },
+  "automatic": {
+    "message": "Automatic (browser language)"
+  },
+  "english": {
+    "message": "English"
+  },
+  "chinese": {
+    "message": "Simplified Chinese"
+  },
+  "languageHint": {
+    "message": "Shared with AIVane Recorder and the local Workbench on this device."
+  },
+  "languageUnavailable": {
+    "message": "Open AIVane Recorder to synchronize language settings."
+  },
+  "languageSaved": {
+    "message": "Language updated across AIVane."
+  },
+  "optionsDescription": {
+    "message": "Connect this browser profile to the local AIVane runtime."
+  },
+  "bridge": {
+    "message": "Bridge"
+  },
+  "checking": {
+    "message": "Checking…"
+  },
+  "profileLabel": {
+    "message": "Profile label"
+  },
+  "profileHint": {
+    "message": "This profile is selected automatically by web.create and web.get. A single connected profile also works without an explicit label."
+  },
+  "bridgeUrl": {
+    "message": "Local bridge URL"
+  },
+  "bridgeHint": {
+    "message": "Only localhost, 127.0.0.1, and ::1 are accepted."
+  },
+  "save": {
+    "message": "Save and reconnect"
+  },
+  "profileInvalid": {
+    "message": "Profile label must use 1–64 letters, digits, dots, underscores, or hyphens."
+  },
+  "saved": {
+    "message": "Saved. Reconnecting…"
+  },
+  "waiting": {
+    "message": "Waiting for AIVane"
+  },
+  "companionNeeded": {
+    "message": "Desktop app required"
+  },
+  "companionMissingTitle": {
+    "message": "Install AIVane on this computer"
+  },
+  "companionMissingDescription": {
+    "message": "AIVane records and replays through the desktop app on this device. Install it, then start recording again."
+  },
+  "companionOffline": {
+    "message": "Desktop app not running"
+  },
+  "companionStartFailedTitle": {
+    "message": "AIVane could not start"
+  },
+  "companionStartFailedDescription": {
+    "message": "Open AIVane Recorder from the Start menu, then try again."
+  },
+  "companionTimeoutTitle": {
+    "message": "AIVane is taking longer than expected"
+  },
+  "companionTimeoutDescription": {
+    "message": "The desktop app was asked to start but did not become ready. Try again, or open AIVane Recorder yourself."
+  },
+  "companionUnsupported": {
+    "message": "Unsupported browser"
+  },
+  "companionUnsupportedTitle": {
+    "message": "This browser cannot reach AIVane"
+  },
+  "companionUnsupportedDescription": {
+    "message": "Native messaging is unavailable here. Use Chrome or Edge 135 or later with the AIVane desktop app installed."
+  },
+  "getDesktopApp": {
+    "message": "Get the desktop app"
+  },
+  "setupInstructions": {
+    "message": "Setup instructions"
+  },
+  "tryAgain": {
+    "message": "Try again"
+  },
+  "privacyNotice": {
+    "message": "Recording sends page content and form values to AIVane on this device. Avoid passwords and sensitive data. Desktop AI features may share selected content with your chosen provider."
+  },
+  "privacyPolicy": {
+    "message": "Privacy policy"
+  }
+}

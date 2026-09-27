@@ -1,0 +1,194 @@
+{
+  "extensionName": {
+    "message": "AIVane 浏览器助手"
+  },
+  "extensionDescription": {
+    "message": "连接本机 AIVane 桌面应用与浏览器，用于用户授权的自动化和录制。"
+  },
+  "connecting": {
+    "message": "连接中"
+  },
+  "ready": {
+    "message": "随时开始"
+  },
+  "idleTitle": {
+    "message": "演示一次，自动变成流程"
+  },
+  "idleDescription": {
+    "message": "点击开始后，像平常一样操作网页即可。"
+  },
+  "actionsRecorded": {
+    "message": "个操作已记录"
+  },
+  "start": {
+    "message": "开始录制"
+  },
+  "open": {
+    "message": "打开 AIVane Recorder"
+  },
+  "pause": {
+    "message": "暂停"
+  },
+  "finish": {
+    "message": "完成"
+  },
+  "discard": {
+    "message": "放弃本次录制"
+  },
+  "resume": {
+    "message": "继续"
+  },
+  "commandFailed": {
+    "message": "操作没有完成"
+  },
+  "connected": {
+    "message": "已连接"
+  },
+  "disconnected": {
+    "message": "未连接"
+  },
+  "starting": {
+    "message": "正在启动"
+  },
+  "startingTitle": {
+    "message": "正在连接 AIVane Recorder"
+  },
+  "startingDescription": {
+    "message": "连接成功后会自动开始录制。"
+  },
+  "recording": {
+    "message": "正在录制"
+  },
+  "recordingTitle": {
+    "message": "继续完成你的操作"
+  },
+  "recordingDescription": {
+    "message": "AIVane 会自动整理重复输入和页面变化。"
+  },
+  "paused": {
+    "message": "已暂停"
+  },
+  "pausedTitle": {
+    "message": "页面可以继续调整"
+  },
+  "pausedDescription": {
+    "message": "准备好后点继续；已记录的内容不会丢失。"
+  },
+  "completed": {
+    "message": "录制完成"
+  },
+  "completedTitle": {
+    "message": "正在整理你的流程"
+  },
+  "completedDescription": {
+    "message": "稍后会自动打开流程详情。"
+  },
+  "openFailed": {
+    "message": "AIVane Recorder 无法启动"
+  },
+  "settings": {
+    "message": "设置"
+  },
+  "language": {
+    "message": "语言"
+  },
+  "automatic": {
+    "message": "自动（跟随浏览器语言）"
+  },
+  "english": {
+    "message": "English"
+  },
+  "chinese": {
+    "message": "简体中文"
+  },
+  "languageHint": {
+    "message": "与本机 AIVane Recorder 和 Workbench 共用此设置。"
+  },
+  "languageUnavailable": {
+    "message": "请打开 AIVane Recorder 以同步语言设置。"
+  },
+  "languageSaved": {
+    "message": "已更新 AIVane 各组件的语言。"
+  },
+  "optionsDescription": {
+    "message": "将此浏览器配置连接到本机 AIVane 运行服务。"
+  },
+  "bridge": {
+    "message": "连接"
+  },
+  "checking": {
+    "message": "正在检查…"
+  },
+  "profileLabel": {
+    "message": "浏览器配置名称"
+  },
+  "profileHint": {
+    "message": "web.create 和 web.get 会自动选择此配置；只有一个连接的配置时也可以省略名称。"
+  },
+  "bridgeUrl": {
+    "message": "本机连接地址"
+  },
+  "bridgeHint": {
+    "message": "仅支持 localhost、127.0.0.1 和 ::1。"
+  },
+  "save": {
+    "message": "保存并重新连接"
+  },
+  "profileInvalid": {
+    "message": "配置名称需为 1–64 个字母、数字、点、下划线或连字符。"
+  },
+  "saved": {
+    "message": "已保存，正在重新连接…"
+  },
+  "waiting": {
+    "message": "等待 AIVane 连接"
+  },
+  "companionNeeded": {
+    "message": "需要桌面端"
+  },
+  "companionMissingTitle": {
+    "message": "请在本机安装 AIVane 桌面端"
+  },
+  "companionMissingDescription": {
+    "message": "AIVane 的录制与回放由本机的桌面端完成。安装后再开始录制。"
+  },
+  "companionOffline": {
+    "message": "桌面端未运行"
+  },
+  "companionStartFailedTitle": {
+    "message": "AIVane 未能启动"
+  },
+  "companionStartFailedDescription": {
+    "message": "请从开始菜单打开 AIVane Recorder，然后重试。"
+  },
+  "companionTimeoutTitle": {
+    "message": "AIVane 启动耗时较长"
+  },
+  "companionTimeoutDescription": {
+    "message": "桌面端已收到启动请求但尚未就绪。可以重试，或自行打开 AIVane Recorder。"
+  },
+  "companionUnsupported": {
+    "message": "浏览器不支持"
+  },
+  "companionUnsupportedTitle": {
+    "message": "此浏览器无法连接 AIVane"
+  },
+  "companionUnsupportedDescription": {
+    "message": "当前浏览器不支持 Native Messaging。请使用 Chrome 或 Edge 135 及以上版本，并安装 AIVane 桌面端。"
+  },
+  "getDesktopApp": {
+    "message": "获取桌面端"
+  },
+  "setupInstructions": {
+    "message": "安装说明"
+  },
+  "tryAgain": {
+    "message": "重试"
+  },
+  "privacyNotice": {
+    "message": "录制会将页面内容和表单值发送到本机 AIVane。请避免录制密码或敏感数据。桌面端 AI 功能可能将相关内容发送给您选择的模型服务。"
+  },
+  "privacyPolicy": {
+    "message": "隐私政策"
+  }
+}
