@@ -115,6 +115,13 @@ export function captureDocumentSnapshot(options = {}) {
     if (explicit) {
       return explicit;
     }
+    // el-switch 等自定义开关:role 属性或 class 含 switch → switch 角色
+    // (2026-09-28 组件审计:纯 div 开关无角色映射,LLM 不知道可点击 toggle)
+    if (/(?:^|[\s_-])(?:switch)(?:[\s_-]|$)/i.test(
+      String(element.getAttribute("class") || "")
+    )) {
+      return "switch";
+    }
     const mapped = ({
       A: "link",
       BUTTON: "button",
