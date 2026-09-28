@@ -363,6 +363,41 @@ export function captureDocumentSnapshot(options = {}) {
     }
   }
 
+  // 弹层选项直采(p-pilot 补丁 2026-09-28 终极铁证:el-select 选项 teleport
+  // 到 body(#app 外),容器折叠时选项 rect=0x0 → TreeWalker skip 整棵子树。
+  // 但弹层开着时容器本身有尺寸,选项只是 LI 自身 0x0(虚拟滚动/懒渲染)。
+  // 后处理:直接查 body 下所有 .el-select-dropdown__item / [class*=dropdown__item],
+  // 有文字的逐个追加进快照,带索引 selector 可执行。
+  if (count < maxNodes) {
+    const dropdownItems = document.querySelectorAll(
+      ".el-select-dropdown__item, [class*='dropdown__item'], .el-dropdown-menu__item"
+    );
+    for (const item of dropdownItems) {
+      if (count >= maxNodes) break;
+      const text = (item.innerText || item.textContent || "").trim();
+      if (!text || text.length > 80) continue;
+      const container = item.closest("[class*='popper'], [class*='dropdown'], [role='listbox']");
+      if (container) {
+        const cr = container.getBoundingClientRect();
+        if (cr.width === 0 && cr.height === 0) continue; // 弹层关着
+      }
+      count += 1;
+      const ref = `e${count}`;
+      const sel = selectorOf(item);
+      const escaped = text.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+      lines.push(`- option "${escaped}" [ref=${ref}]`);
+      refs[ref] = {
+        selector: sel.selector,
+        role: "option",
+        name: text,
+        nth: sel.nth,
+        tagName: item.tagName.toLowerCase(),
+        id: item.id || null,
+        nameAttr: item.getAttribute("name")
+      };
+    }
+  }
+
   return {
     tree: lines.join("\n"),
     refs,
