@@ -144,6 +144,12 @@ export function captureDocumentSnapshot(options = {}) {
    * has to wade through to find the control that matters. Text still names
    * the elements that own it: anything with a role, and any leaf.
    */
+  // checkbox 就近标签(p-pilot 补丁 2026-09-28:el-checkbox 的文字在兄弟/包装层
+  // 《用户服务协议》按钮上,input 自身无名 → 代填的协议勾选误点链接按钮弹窗)
+  const closestLabelOf = element => {
+    const holder = element.closest("label, .el-checkbox, [class*='checkbox'], [class*='Checkbox']");
+    return holder ? textOf(holder).slice(0, 60) : "";
+  };
   const nameOf = (element, role) =>
     element.getAttribute("aria-label") ||
     element.getAttribute("alt") ||
@@ -152,6 +158,9 @@ export function captureDocumentSnapshot(options = {}) {
     // 只放 placeholder,不读则密码框无名 → 登录检测/凭据代填/LLM 识别三链齐断)
     element.getAttribute("placeholder") ||
     element.getAttribute("aria-placeholder") ||
+    (element.tagName === "INPUT" && element.type === "checkbox"
+      ? closestLabelOf(element)
+      : "") ||
     (role || !element.firstElementChild ? textOf(element) : "");
   /**
    * Where an element stands in the accessibility tree, in one pass over the
