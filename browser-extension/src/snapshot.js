@@ -148,6 +148,10 @@ export function captureDocumentSnapshot(options = {}) {
     element.getAttribute("aria-label") ||
     element.getAttribute("alt") ||
     element.getAttribute("title") ||
+    // placeholder 兜底(p-pilot 补丁 2026-09-28:vben/Element Plus 输入框标签
+    // 只放 placeholder,不读则密码框无名 → 登录检测/凭据代填/LLM 识别三链齐断)
+    element.getAttribute("placeholder") ||
+    element.getAttribute("aria-placeholder") ||
     (role || !element.firstElementChild ? textOf(element) : "");
   /**
    * Where an element stands in the accessibility tree, in one pass over the
