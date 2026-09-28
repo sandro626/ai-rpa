@@ -377,10 +377,9 @@ export function captureDocumentSnapshot(options = {}) {
       const text = (item.innerText || item.textContent || "").trim();
       if (!text || text.length > 80) continue;
       const container = item.closest("[class*='popper'], [class*='dropdown'], [role='listbox']");
-      if (container) {
-        const cr = container.getBoundingClientRect();
-        if (cr.width === 0 && cr.height === 0) continue; // 弹层关着
-      }
+      // 不检查容器尺寸(2026-09-28 真机:容器可能始终有尺寸但 visibility:hidden,
+      // 或弹层开着时容器 rect 仍为 0(只在子元素上展开)——检查反而挡住采集。
+      // 弹层关着时选项在 DOM 里也采(无害,LLM 点不到自然 stale)。
       count += 1;
       const ref = `e${count}`;
       const sel = selectorOf(item);
