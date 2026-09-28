@@ -143,6 +143,26 @@ export function captureDocumentSnapshot(options = {}) {
    * has to wade through to find the control that matters. Text still names
    * the elements that own it: anything with a role, and any leaf.
    */
+  const iconLabelOf = element => {
+    const describedBy = element.getAttribute("aria-describedby");
+    if (describedBy) {
+      const tip = document.getElementById(describedBy);
+      const text = tip ? (tip.innerText || tip.textContent || "").trim() : "";
+      if (text) return text.slice(0, 40);
+    }
+    for (const attr of element.attributes) {
+      if (attr.name.startsWith("data-") && /[\u4e00-\u9fff]/.test(attr.value)) {
+        return attr.value.slice(0, 40);
+      }
+    }
+    const labelledBy = element.getAttribute("aria-labelledby");
+    if (labelledBy) {
+      const src = document.getElementById(labelledBy);
+      const text = src ? (src.innerText || "").trim() : "";
+      if (text) return text.slice(0, 40);
+    }
+    return "";
+  };
   // checkbox 就近标签(p-pilot 补丁 2026-09-28:el-checkbox 的文字在兄弟/包装层
   // 《用户服务协议》按钮上,input 自身无名 → 代填的协议勾选误点链接按钮弹窗)
   const closestLabelOf = element => {
@@ -157,6 +177,7 @@ export function captureDocumentSnapshot(options = {}) {
     // 只放 placeholder,不读则密码框无名 → 登录检测/凭据代填/LLM 识别三链齐断)
     element.getAttribute("placeholder") ||
     element.getAttribute("aria-placeholder") ||
+    iconLabelOf(element) ||
     (element.tagName === "INPUT" && element.type === "checkbox"
       ? closestLabelOf(element)
       : "") ||
