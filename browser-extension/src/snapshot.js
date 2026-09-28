@@ -213,8 +213,15 @@ export function captureDocumentSnapshot(options = {}) {
     ) {
       return "reject";
     }
+    // 弹层豁免(p-pilot 补丁 2026-09-28 真机:el-select popper teleport 到
+    // body 但初始 display:none/动画期间 opacity:0,TreeWalker 直接 reject
+    // 整棵子树——下拉选项从进不了快照,VL 也只在快照内挑,两路全灭)。
+    // 是 popper 类容器就跳过 hidden 检查,只看有没有尺寸。
+    const isPopper = /(?:^|[\s_-])(?:el-popper|el-select__popper|el-picker__popper|el-dropdown__popper|vben-popper|ant-select-dropdown)(?:[\s_-]|$)/.test(
+      String(element.getAttribute("class") || "")
+    ) || element.getAttribute("role") === "listbox";
     const style = globalThis.getComputedStyle(element);
-    if (style.display === "none" || style.visibility === "hidden") {
+    if (!isPopper && (style.display === "none" || style.visibility === "hidden")) {
       return "reject";
     }
     const rectangle = element.getBoundingClientRect();
