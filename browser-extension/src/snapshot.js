@@ -333,8 +333,13 @@ export function captureDocumentSnapshot(options = {}) {
       for (const arrow of arrows) {
         const verticalOverlap =
           arrow.rect.top < combo.rect.bottom && arrow.rect.bottom > combo.rect.top;
-        const gap = arrow.rect.left - combo.rect.right;
-        if (verticalOverlap && gap >= -8 && gap <= 24) {
+        // el-select 箭头两种位置:①combobox 内部右侧(absolute inset,gap 大负数)
+        // ②combobox 外部紧右(gap 0-24px)。统一判:箭头中心在 combobox 右侧
+        // 25% 区域内(相对 combobox 宽度)
+        const arrowCenterX = arrow.rect.left + arrow.rect.width / 2;
+        const comboRightZone = combo.rect.left + combo.rect.width * 0.75;
+        const inRightZone = arrowCenterX >= comboRightZone && arrowCenterX <= combo.rect.right + 24;
+        if (verticalOverlap && inRightZone) {
           const label = (combo.name || "下拉框") + "下拉箭头";
           const idx = parseInt(arrow.ref.slice(1), 10) - 1;
           if (idx >= 0 && idx < lines.length) {
