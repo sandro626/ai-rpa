@@ -263,11 +263,18 @@ export function captureDocumentSnapshot(options = {}) {
   // The walker filters everything it returns, so the root is the only node
   // whose standing has to be judged here.
   let current = inspect(root) === "accept" ? root : walker.nextNode();
+  const boxes = []; // (ref, role, name, rect) —— 后处理邻近命名用
   while (current && count < maxNodes) {
     const ref = `e${count + 1}`;
     const role = roleOf(current);
     const name = nameOf(current, role);
     const target = selectorOf(current);
+    boxes.push({
+      ref,
+      role,
+      name,
+      rect: current.getBoundingClientRect()
+    });
     let depth = 0;
     for (let parent = current.parentElement; parent && parent !== root; parent = parent.parentElement) {
       depth += 1;
@@ -306,6 +313,37 @@ export function captureDocumentSnapshot(options = {}) {
     // missing rather than absent.
     lines.push(`- [truncated after ${count} nodes; the page has more]`);
   }
+  // combobox 邻近按钮自动命名(p-pilot 补丁 2026-09-28 真机:el-select 的
+  // 箭头/触发图标是同排无名 button,LLM 不知道哪个能点开弹层)。规则:
+  // 无名 button/role=button 的 box 与 combobox 垂直重叠、水平距离 ≤24px →
+  // 命名为 "<combobox 名或占位>的下拉箭头",tree 行同步重写。
+  const combos = boxes.filter(b => b.role === "combobox" && b.rect.width > 0);
+  if (combos.length) {
+    const arrows = boxes.filter(
+      b => b.role === "button" && !b.name && b.rect.width > 0 && b.rect.width <= 40
+    );
+    for (const combo of combos) {
+      for (const arrow of arrows) {
+        const verticalOverlap =
+          arrow.rect.top < combo.rect.bottom && arrow.rect.bottom > combo.rect.top;
+        const gap = arrow.rect.left - combo.rect.right;
+        if (verticalOverlap && gap >= -8 && gap <= 24) {
+          const label = (combo.name || "下拉框") + "下拉箭头";
+          const idx = parseInt(arrow.ref.slice(1), 10) - 1;
+          if (idx >= 0 && idx < lines.length) {
+            lines[idx] = lines[idx].replace(
+              /^(\s*- button)( \[ref=)/,
+              `$1 "${label}"$2`
+            );
+            if (refs[arrow.ref]) {
+              refs[arrow.ref].name = label;
+            }
+          }
+        }
+      }
+    }
+  }
+
   return {
     tree: lines.join("\n"),
     refs,
