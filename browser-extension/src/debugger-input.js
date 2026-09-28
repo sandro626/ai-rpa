@@ -171,46 +171,6 @@ function keyDescriptor(value) {
   throw new TypeError(`Unsupported key '${key}'.`);
 }
 
-const MODIFIER_BITS = { Alt: 1, Ctrl: 2, Control: 2, Meta: 4, Command: 4, Shift: 8 };
-
-export function parseKeyCombo(value) {
-  const raw = String(value ?? "");
-  const parts = raw.split("+").map(part => part.trim());
-  if (!parts.length || parts.some(part => !part)) {
-    throw new TypeError(`Unsupported key combo '${raw}'.`);
-  }
-  let modifiers = 0;
-  for (const part of parts.slice(0, -1)) {
-    const canonical = part.charAt(0).toUpperCase() + part.slice(1);
-    const bits = MODIFIER_BITS[part] ?? MODIFIER_BITS[canonical];
-    if (bits == null) {
-      throw new TypeError(`Unsupported modifier '${part}' in '${raw}'.`);
-    }
-    modifiers |= bits;
-  }
-  const descriptor = keyDescriptor(parts[parts.length - 1]);
-  return { ...descriptor, modifiers };
-}
-
-export async function dispatchPageKeyPress(chromeApi, parameters) {
-  const tabId = requireInteger(parameters.tabId, "tabId");
-  const descriptor = parseKeyCombo(parameters.key);
-  assertCommandActive(parameters);
-  return withDebugger(chromeApi, tabId, async (_target, send) => {
-    assertCommandActive(parameters);
-    const base = {
-      key: descriptor.key,
-      code: descriptor.code,
-      windowsVirtualKeyCode: descriptor.keyCode,
-      nativeVirtualKeyCode: descriptor.keyCode,
-      modifiers: descriptor.modifiers
-    };
-    await send("Input.dispatchKeyEvent", { type: "rawKeyDown", ...base });
-    await send("Input.dispatchKeyEvent", { type: "keyUp", ...base });
-    return { pressed: true, tabId, key: String(parameters.key), modifiers: descriptor.modifiers };
-  }, debuggerOptions(parameters, "page.pressKey"));
-}
-
 async function humanPause(parameters) {
   if (parameters.humanize === false) {
     return;
@@ -1050,4 +1010,44 @@ function assertCommandActive(parameters) {
       "The browser command expired before input dispatch."
     );
   }
+}
+
+const MODIFIER_BITS = { Alt: 1, Ctrl: 2, Control: 2, Meta: 4, Command: 4, Shift: 8 };
+
+export function parseKeyCombo(value) {
+  const raw = String(value ?? "");
+  const parts = raw.split("+").map(part => part.trim());
+  if (!parts.length || parts.some(part => !part)) {
+    throw new TypeError(`Unsupported key combo '${raw}'.`);
+  }
+  let modifiers = 0;
+  for (const part of parts.slice(0, -1)) {
+    const canonical = part.charAt(0).toUpperCase() + part.slice(1);
+    const bits = MODIFIER_BITS[part] ?? MODIFIER_BITS[canonical];
+    if (bits == null) {
+      throw new TypeError(`Unsupported modifier '${part}' in '${raw}'.`);
+    }
+    modifiers |= bits;
+  }
+  const descriptor = keyDescriptor(parts[parts.length - 1]);
+  return { ...descriptor, modifiers };
+}
+
+export async function dispatchPageKeyPress(chromeApi, parameters) {
+  const tabId = requireInteger(parameters.tabId, "tabId");
+  const descriptor = parseKeyCombo(parameters.key);
+  assertCommandActive(parameters);
+  return withDebugger(chromeApi, tabId, async (_target, send) => {
+    assertCommandActive(parameters);
+    const base = {
+      key: descriptor.key,
+      code: descriptor.code,
+      windowsVirtualKeyCode: descriptor.keyCode,
+      nativeVirtualKeyCode: descriptor.keyCode,
+      modifiers: descriptor.modifiers
+    };
+    await send("Input.dispatchKeyEvent", { type: "rawKeyDown", ...base });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", ...base });
+    return { pressed: true, tabId, key: String(parameters.key), modifiers: descriptor.modifiers };
+  }, debuggerOptions(parameters, "page.pressKey"));
 }

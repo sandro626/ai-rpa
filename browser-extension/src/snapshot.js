@@ -92,10 +92,9 @@ export function captureDocumentSnapshot(options = {}) {
   };
   // 可点击自定义控件补名(p-pilot 补丁,受管模式 2026-09-19 同款启发式):
   // vben/ElementPlus 类 SPA 的按钮/下拉/表格操作列是纯 div/li/span,无 role
-  // 无 aria → 快照里只剩无名 group,p-pilot 的 LLM 看不见「学校切换」这类
-  // 顶栏控件(2026-09-27 真机实证,任务 16+ 步滚动找不到)。三路信号:显式
-  // 交互属性、交互 class、cursor 样式。名字随 role 自动补齐(nameOf 的 role
-  // 分支会取 innerText)。
+  // 无 aria → 快照里只剩无名 group,LLM 看不见「学校切换」这类顶栏控件
+  // (2026-09-27 真机实证)。三路信号:显式交互属性、交互 class、cursor 样式。
+  // 名字随 role 自动补齐(nameOf 的 role 分支会取 innerText)。
   const looksClickable = element => {
     if (element.hasAttribute("onclick") || element.getAttribute("tabindex") === "0") {
       return true;

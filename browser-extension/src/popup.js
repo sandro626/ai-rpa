@@ -143,6 +143,8 @@ function render() {
 
   const recording = state.active && state.state === "recording";
   const paused = state.active && state.state === "paused";
+  document.querySelector("#storeActivation").hidden =
+    state.connected === true || recording || paused || state.starting === true;
   const guidance = recording || paused || state.starting
     ? null
     : companionGuidance(state.errorCode);

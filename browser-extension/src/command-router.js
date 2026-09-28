@@ -48,6 +48,11 @@ export function createCommandRouter(chromeApi, options = {}) {
       };
     },
 
+    async "page.pressKey"(parameters) {
+      assertCommandActive(parameters);
+      return dispatchPageKeyPress(chromeApi, parameters);
+    },
+
     async "session.attach"(parameters) {
       const sessionId = requireNonEmptyString(parameters.sessionId, "sessionId");
       const client = options.getClientInfo?.() ?? {};
@@ -436,11 +441,6 @@ export function createCommandRouter(chromeApi, options = {}) {
         await verifyInputValue(chromeApi, parameters, expected);
       }
       return { ...result, element: prepared.element };
-    },
-
-    async "page.pressKey"(parameters) {
-      assertCommandActive(parameters);
-      return dispatchPageKeyPress(chromeApi, parameters);
     },
 
     async "element.pressKey"(parameters) {

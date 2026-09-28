@@ -61,28 +61,35 @@ export class LoopbackLongPollClient {
     this.asyncError = null;
     this.running = true;
     let backoffMs = 250;
-    while (this.running) {
-      try {
-        await this.connect();
-        backoffMs = 250;
-        while (this.running && this.connected) {
-          await this.waitForDispatchSlot();
-          if (this.asyncError) {
-            const error = this.asyncError;
-            this.asyncError = null;
-            throw error;
+    try {
+      while (this.running) {
+        try {
+          await this.connect();
+          backoffMs = 250;
+          while (this.running && this.connected) {
+            await this.waitForDispatchSlot();
+            if (this.asyncError) {
+              const error = this.asyncError;
+              this.asyncError = null;
+              throw error;
+            }
+            await this.pollOnce();
           }
-          await this.pollOnce();
+        } catch (error) {
+          this.connected = false;
+          if (!this.running) {
+            break;
+          }
+          // Request timeouts and transport resets also abort fetches. Only an
+          // explicit stop ends the loop; an abort while running must reconnect.
+          console.warn("AIVane bridge reconnect scheduled.", error);
+          await this.sleep(backoffMs);
+          backoffMs = Math.min(backoffMs * 2, MAX_BACKOFF_MS);
         }
-      } catch (error) {
-        this.connected = false;
-        if (!this.running || error?.name === "AbortError") {
-          break;
-        }
-        console.warn("AIVane bridge reconnect scheduled.", error);
-        await this.sleep(backoffMs);
-        backoffMs = Math.min(backoffMs * 2, MAX_BACKOFF_MS);
       }
+    } finally {
+      this.running = false;
+      this.connected = false;
     }
   }
 
