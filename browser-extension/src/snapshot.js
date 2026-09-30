@@ -287,6 +287,7 @@ export function captureDocumentSnapshot(options = {}) {
       ref,
       role,
       name,
+      className: String(current.getAttribute("class") || "").slice(0, 80),
       rect: current.getBoundingClientRect()
     });
     let depth = 0;
@@ -358,6 +359,44 @@ export function captureDocumentSnapshot(options = {}) {
               refs[arrow.ref].name = label;
             }
           }
+        }
+      }
+    }
+  }
+
+  // 日期/范围选择器就近标签命名(p-pilot 补丁 2026-09-30 真机 bmsys:「创建时间:」
+  // 后的双日期框是自定义无名容器(el-date-editor/el-range-editor 族,class 可辨),
+  // 无名无角色 → LLM 无法引用只能幻觉编号乱 fill(两轮 input did not persist)。
+  // 规则:class 含 picker/date/range/editor 词元的无名盒子,行高 20-48px、
+  // 宽 ≤320px,左侧最近的冒号结尾文本标签(「创建时间」这类)垂直重叠且
+  // 水平紧邻(≤120px)→ 命名 "<标签>日期选择框"。点击它开日历,弹层
+  // (el-picker__popper 已在豁免名单)内容即可进快照供点选。
+  const colonLabels = boxes.filter(
+    b => b.name && /[::]$/.test(b.name) && b.rect.height > 0 && b.rect.height <= 40
+  );
+  if (colonLabels.length) {
+    const pickerBoxes = boxes.filter(
+      b => !b.name && b.rect.width >= 40 && b.rect.width <= 320
+        && b.rect.height >= 20 && b.rect.height <= 48
+        && /(?:^|[\s_-])(?:[\w-]*picker|[\w-]*date|[\w-]*range|[\w-]*editor)(?:[\s_-]|$)/i.test(
+          b.className
+        )
+    );
+    for (const label of colonLabels) {
+      for (const box of pickerBoxes) {
+        const verticalOverlap =
+          box.rect.top < label.rect.bottom && box.rect.bottom > label.rect.top;
+        const rightOf =
+          box.rect.left >= label.rect.right - 8 && box.rect.left - label.rect.right < 120;
+        if (!verticalOverlap || !rightOf) continue;
+        const newLabel = label.name.replace(/[::]$/, "") + "日期选择框";
+        const idx = parseInt(box.ref.slice(1), 10) - 1;
+        if (idx >= 0 && idx < lines.length && refs[box.ref] && !refs[box.ref].name) {
+          lines[idx] = lines[idx].replace(
+            /^(\s*- [a-z]+)(\s*\[ref=)/,
+            `$1 "${newLabel}"$2`
+          );
+          refs[box.ref].name = newLabel;
         }
       }
     }
