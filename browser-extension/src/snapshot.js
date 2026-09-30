@@ -217,7 +217,7 @@ export function captureDocumentSnapshot(options = {}) {
     // body 但初始 display:none/动画期间 opacity:0,TreeWalker 直接 reject
     // 整棵子树——下拉选项从进不了快照,VL 也只在快照内挑,两路全灭)。
     // 是 popper 类容器就跳过 hidden 检查,只看有没有尺寸。
-    const isPopper = /(?:^|[\s_-])(?:el-popper|el-select__popper|el-picker__popper|el-dropdown__popper|vben-popper|ant-select-dropdown)(?:[\s_-]|$)/.test(
+    const isPopper = /(?:^|[\s_-])(?:el-popper|el-select__popper|el-picker__popper|el-dropdown__popper|vben-popper|ant-select-dropdown|layui-laydate|[\w-]*laydate)(?:[\s_-]|$)/.test(
       String(element.getAttribute("class") || "")
     ) || element.getAttribute("role") === "listbox";
     const style = globalThis.getComputedStyle(element);
