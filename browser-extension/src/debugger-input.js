@@ -2,8 +2,53 @@ const DEBUGGER_PROTOCOL_VERSION = "1.3";
 const DEFAULT_DEBUGGER_CLEANUP_RESERVE_MS = 500;
 const DEFAULT_DEBUGGER_RESPONSE_GRACE_MS = 50;
 const DEBUGGER_ACTION_WATCHDOG_GRACE_MS = 10;
-const NEVER_SETTLES = new Promise(() => {});
+
 const debuggerStatesByApi = new WeakMap();
+
+// ---------- JS 对话框拆弹(2026-09-30 真机:菜单/下拉点击后 debugger 通道 ---
+// 必死——element.click/snapshot.capture 双超时,而 tab.list/captureVisibleTab
+// 畅通;页面 JS 原生对话框(alert/confirm)冻结 debugger 会话是头号形态,
+// 此前零处理。自动 dismiss(accept:false):confirm 取「取消」最安全,
+// alert 等价,prompt 得 null。MV3 顶层注册 SW 重启安全;替身环境静默跳过。
+const dialogGuardInstalled = new WeakSet();
+
+export function ensureJavascriptDialogGuard(chromeApi) {
+  const api = chromeApi && chromeApi.debugger;
+  if (!api || !api.onEvent || typeof api.onEvent.addListener !== "function") return;
+  if (dialogGuardInstalled.has(chromeApi)) return;
+  dialogGuardInstalled.add(chromeApi);
+  api.onEvent.addListener((source, method, params) => {
+    if (method !== "Page.javascriptDialogOpening" || !source || !source.tabId) return;
+    try {
+      console.info(
+        "[aivane] js dialog dismissed:",
+        params && params.type,
+        String((params && params.message) || "").slice(0, 120)
+      );
+    } catch {}
+    void api
+      .sendCommand({ tabId: source.tabId }, "Page.handleJavaScriptDialog", { accept: false })
+      .catch(() => undefined);
+  });
+}
+
+// 有死点不能全死(2026-09-30):NEVER_SETTLES 无限挂起会把该 tab 的命令队列
+// 永久吊死(后续命令全排队等恢复,SW 重启才解)。有界恢复窗:到点后尽力
+// 补一刀 detach、复位恢复态,让 barrier 收尾、后续命令开新 generation。
+const DEBUGGER_RECOVERY_ABANDON_MS = 5000;
+
+async function holdRecoveryBounded(chromeApi, state, target, generation, timing, stage) {
+  await new Promise(resolve => {
+    timing.setTimeout(resolve, DEBUGGER_RECOVERY_ABANDON_MS);
+  });
+  try {
+    await chromeApi.debugger.detach(target);
+  } catch {} // 本就没挂或已断:目的只是清掉可能残留的僵尸会话
+  if (state.recoveryStage === stage || state.activeGeneration === generation) {
+    state.recoveryPending = false;
+    state.recoveryStage = null;
+  }
+}
 
 export async function dispatchPointerClick(chromeApi, parameters) {
   const tabId = requireInteger(parameters.tabId, "tabId");
@@ -185,6 +230,7 @@ async function humanPause(parameters) {
 
 export function withDebugger(chromeApi, tabId, action, options = {}) {
   const states = debuggerStates(chromeApi);
+  ensureJavascriptDialogGuard(chromeApi);
   const state = states.get(tabId) ?? {
     nextGeneration: 0,
     activeGeneration: null,
@@ -325,11 +371,17 @@ async function runDebuggerGeneration(
       } else {
         timings.cleanupStatus = "failed";
         markRecoveryPending(state, generation, "lateDetach");
-        await NEVER_SETTLES;
+        await holdRecoveryBounded(chromeApi, state, target, generation, timing, "lateDetach");
       }
     }
     return;
   }
+
+  // Page 域开闸:javascriptDialogOpening 事件依赖(拆弹守卫见模块头)。
+  // fire-and-forget 直达(send 助手此时尚未声明):失败不阻断命令本体。
+  try {
+    void chromeApi.debugger.sendCommand(target, "Page.enable", {}).catch(() => {});
+  } catch {}
 
   let actionActive = true;
   let sendSequence = 0;
@@ -468,10 +520,10 @@ async function runDebuggerGeneration(
     } catch {
       timings.cleanupStatus = "failed";
       markRecoveryPending(state, generation, "detach");
-      await NEVER_SETTLES;
+      await holdRecoveryBounded(chromeApi, state, target, generation, timing, "detach");
     }
   } else if (cleanupOutcome.error) {
-    await NEVER_SETTLES;
+    await holdRecoveryBounded(chromeApi, state, target, generation, timing, "detach");
   }
 }
 
