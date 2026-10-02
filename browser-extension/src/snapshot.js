@@ -206,6 +206,17 @@ export function captureDocumentSnapshot(options = {}) {
     if (element.ownerSVGElement) {
       return "reject";
     }
+    // 隐藏/零尺寸的原生 checkbox/radio 不拒(2026-10-02 真机 bmsys 登录页:
+    // 皮肤化协议勾选框的原生 input 被样式藏起(0 尺寸/opacity:0),整元素
+    // 进不了快照 → 代填链勾选环断,登录失败,会话失效死循环一整天)。
+    // 原生 input[type=checkbox] 键盘可达、语义真实——视觉由兄弟节点代绘
+    // 不改变其可交互性;点击侧有 JS 下钻兜底,零尺寸无碍。
+    if (
+      element.tagName === "INPUT" &&
+      /^(checkbox|radio)$/i.test(element.type || "")
+    ) {
+      return "accept";
+    }
     if (
       element.getAttribute("aria-hidden") === "true" ||
       element.hasAttribute("inert") ||
