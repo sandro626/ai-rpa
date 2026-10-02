@@ -41,12 +41,6 @@ async function relayDispatch(method, parameters, metadata) {
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg?.aivaneNeedConfig) {
-    void loadConfiguration()
-      .then(config => sendResponse({ ok: true, config }))
-      .catch(error => sendResponse({ ok: false, error: String(error) }));
-    return true;
-  }
   if (msg?.aivaneDispatch) {
     const { method, parameters, metadata } = msg.aivaneDispatch;
     void relayDispatch(method, parameters, metadata)
