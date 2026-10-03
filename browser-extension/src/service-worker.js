@@ -14,6 +14,69 @@ import { ensureRecorderAvailable } from "./native-messaging.js";
 import { COMPANION_SETUP_URL } from "./companion.js";
 
 const RECONNECT_ALARM = "aivane-browser-bridge-reconnect";
+const OFFSCREEN_URL = "offscreen/host.html";
+
+// 命令中继(2026-10-02 根治 MV3 驱逐):轮询宿主在 offscreen document,
+// 命令经此消息到达——SW 被驱逐时 Chrome 用消息唤醒它(毫秒级),驱逐
+// 不再产生 30s 死亡窗。lazyRouter:唤醒后的新 SW 实例按需重建路由器
+// (browserSessions 持久于 storage.session,debugger 态按代重建,同旧语义)。
+let lazyRouter = null;
+
+async function relayDispatch(method, parameters, metadata) {
+  if (!lazyRouter) {
+    const storedSessions = await chrome.storage.session.get("browserSessions");
+    lazyRouter = createCommandRouter(chrome, {
+      getClientInfo: () => ({
+        clientId: "offscreen-relay",
+        profileId: "default",
+        browserName: detectBrowserName(),
+        connected: true
+      }),
+      initialSessions: storedSessions.browserSessions || [],
+      onSessionsChanged: browserSessions =>
+        chrome.storage.session.set({ browserSessions })
+    });
+  }
+  return lazyRouter(method, parameters, metadata);
+}
+
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg?.aivaneDispatch) {
+    const { method, parameters, metadata } = msg.aivaneDispatch;
+    void relayDispatch(method, parameters, metadata)
+      .then(result => sendResponse({ ok: true, result }))
+      .catch(error => sendResponse({
+        ok: false,
+        code: error?.code || "DISPATCH_FAILED",
+        message: String(error?.message || error)
+      }));
+    return true; // async sendResponse
+  }
+  return false;
+});
+
+// offscreen 宿主引导(幂等):已存在即跳过;被关闭由闹钟看门狗补拉
+async function ensurePollingHost() {
+  if (chrome.offscreen?.createDocument) {
+    try {
+      const contexts = await chrome.runtime.getContexts({
+        contextTypes: ["OFFSCREEN_DOCUMENT"]
+      });
+      if (contexts.length === 0) {
+        await chrome.offscreen.createDocument({
+          url: OFFSCREEN_URL,
+          reasons: ["WORKERS"],
+          justification:
+            "AIVane bridge long-poll host; survives service-worker idle eviction (2026-10-02)"
+        });
+      }
+      return true;
+    } catch (error) {
+      console.warn("AIVane offscreen host unavailable, falling back to in-SW polling.", error);
+    }
+  }
+  return false;
+}
 const LEGACY_BRIDGE_BASE_URL = "http://127.0.0.1:32145/aivane/browser/v1/";
 const CONFIG_KEYS = new Set([
   "bridgeBaseUrl",
@@ -63,6 +126,9 @@ async function startBridge() {
     return startPromise;
   }
   startPromise = (async () => {
+    if (await ensurePollingHost()) {
+      return; // 轮询已在长生宿主;本地 client 不再起(双轮询会抢命令)
+    }
     if (client) {
       await client.stop();
     }
@@ -126,10 +192,11 @@ chrome.runtime.onStartup.addListener(() => {
   void recorder.status(true);
 });
 chrome.alarms.onAlarm.addListener(alarm => {
-  if (alarm.name === RECONNECT_ALARM && !client?.running) {
-    void startBridge();
-  }
   if (alarm.name === RECONNECT_ALARM) {
+    void ensurePollingHost();
+    if (!client?.running && !chrome.offscreen?.createDocument) {
+      void startBridge();
+    }
     void recorder.status(true);
   }
 });
