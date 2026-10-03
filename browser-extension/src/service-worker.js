@@ -41,6 +41,10 @@ async function relayDispatch(method, parameters, metadata) {
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg?.aivaneKeepalive) {
+    sendResponse({ ok: true }); // 心跳:offscreen 每 25s ping,重置 SW 空闲计时
+    return false;
+  }
   if (msg?.aivaneNeedConfig) {
     void loadConfiguration()
       .then(config => sendResponse({ ok: true, config }))
@@ -132,9 +136,7 @@ async function startBridge() {
     return startPromise;
   }
   startPromise = (async () => {
-    if (await ensurePollingHost()) {
-      return; // 轮询已在长生宿主;本地 client 不再起(双轮询会抢命令)
-    }
+    await ensurePollingHost(); // offscreen 心跳保活宿主(不影响 SW 自身轮询)
     if (client) {
       await client.stop();
     }
@@ -200,8 +202,8 @@ chrome.runtime.onStartup.addListener(() => {
 chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === RECONNECT_ALARM) {
     void ensurePollingHost();
-    if (!client?.running && !chrome.offscreen?.createDocument) {
-      void startBridge();
+    if (!client?.running) {
+      void startBridge(); // SW 轮询不再因 offscreen 存在而跳过(2026-10-03 心跳保活模式)
     }
     void recorder.status(true);
   }
