@@ -1,46 +1,16 @@
-// 轮询宿主:LoopbackLongPollClient 全量运行于此(配置同源 chrome.storage.
-// local),dispatch 中继给 SW 执行。SW 可被 Chrome 随时驱逐——消息会唤醒它;
-// 驱逐期间轮询不停,命令零丢失(2026-10-02 真机:死亡窗 27s≈30s 闹钟周期,
-// 任务启动命令屡次团灭,根治即轮询出 SW)。
+// 轮询宿主:LoopbackLongPollClient 全量运行于此,dispatch 中继给 SW 执行。
+// SW 可被 Chrome 随时驱逐——消息会唤醒它;驱逐期间轮询不停,命令零丢失
+// (2026-10-03 裁决:驱逐窗实测超 45s,闹钟唤醒证伪,offscreen 是唯一根治)。
+// ★ offscreen 文档无 chrome.storage(2026-10-02 真机首跑即炸)——配置由
+// SW 经 chrome.runtime 消息递入(aivaneNeedConfig),宿主只消费。
 import { LoopbackLongPollClient } from "../src/loopback-client.js";
-import {
-  DEFAULT_BRIDGE_BASE_URL,
-  createId,
-  createSecret
-} from "../src/protocol.js";
-
-const LEGACY_BRIDGE_BASE_URL = "http://127.0.0.1:32145/aivane/browser/v1/";
-const CONFIG_KEYS = [
-  "bridgeBaseUrl",
-  "bridgeSecret",
-  "clientId",
-  "profileId",
-  "browserName",
-  "pollWaitMs"
-];
 
 async function loadConfiguration() {
-  const stored = await chrome.storage.local.get(CONFIG_KEYS);
-  const clientId = stored.clientId || createId("browser");
-  const bridgeSecret = stored.bridgeSecret || createSecret();
-  if (!stored.clientId || !stored.bridgeSecret) {
-    await chrome.storage.local.set({ clientId, bridgeSecret });
+  const reply = await chrome.runtime.sendMessage({ aivaneNeedConfig: true });
+  if (!reply || reply.ok !== true) {
+    throw new Error("config relay failed: " + String(reply && reply.error));
   }
-  const baseUrl = stored.bridgeBaseUrl === LEGACY_BRIDGE_BASE_URL
-    ? DEFAULT_BRIDGE_BASE_URL
-    : stored.bridgeBaseUrl || DEFAULT_BRIDGE_BASE_URL;
-  if (stored.bridgeBaseUrl === LEGACY_BRIDGE_BASE_URL) {
-    await chrome.storage.local.set({ bridgeBaseUrl: baseUrl });
-  }
-  return {
-    baseUrl,
-    bridgeSecret,
-    clientId,
-    profileId: stored.profileId || "default",
-    browserName: stored.browserName || "chrome",
-    pollWaitMs: stored.pollWaitMs,
-    extensionVersion: chrome.runtime.getManifest().version
-  };
+  return reply.config;
 }
 
 // dispatch 中继:offscreen 无 chrome.debugger/scripting 执行面,消息唤醒
@@ -83,7 +53,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       await start();
       sendResponse({ ok: true });
     })();
-    return true; // async sendResponse
+    return true;
   }
   return false;
 });
