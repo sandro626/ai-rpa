@@ -50,7 +50,8 @@
     "scripting",
     "storage",
     "tabs",
-    "webNavigation"
+    "webNavigation",
+    "offscreen"
   ],
-  "version": "0.6.15"
+  "version": "0.6.16"
 }
